@@ -49,8 +49,6 @@ const WORLD_MAP: Matrix = Matrix {
 // bad index function arughh this code is duct tape  and paper
 
 fn main() {
-    println!("Hello, world!");
-
     // remeber https://docs.rs/sdl2/latest/sdl2
     // notes for future me; figure out what .unwrap(); does
     let sdl_context = sdl2::init().unwrap(); 
@@ -67,11 +65,6 @@ fn main() {
     // and this is the canvas we will be outputting to
     let mut canvas = window.into_canvas().build().unwrap();
 
-    // draw 0, 255, 255 for 1 frame 
-    canvas.set_draw_color(Color::RGB(0, 255, 255));
-    canvas.clear();
-    canvas.present();
-
     // game loop (i suspect we will do most of the code here)
     let mut i = 0;
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -86,8 +79,6 @@ fn main() {
 
     'main: loop {
         i = (i +1) % 255;
-        canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
-        canvas.clear();
 
         for event in event_pump.poll_iter() {
             match event {
@@ -102,7 +93,7 @@ fn main() {
         // raycasting code
         let mut x: i32 = 0;
         while x < SCREEN_WIDTH {
-            let w: f32 = SCREEN_WIDTH as f32;
+            //let w: f32 = SCREEN_WIDTH as f32;
             let camera_x: f32 = (2 * x as i32 / SCREEN_WIDTH - 1) as f32;
             let ray_dir = Vec2{x: dir.x + plane.x * camera_x,
                                      y: dir.y + plane.y * camera_x};
@@ -126,7 +117,7 @@ fn main() {
             let step_y: i32;
             
             let mut hit: i32 = 0;
-            let mut side: i32;
+            let mut side: i32 = -1; // rust was being meanie weanie 
             // calculate step and initial side Dist note that since we calate x first we set y as 0
             if ray_dir.x < 0. {
                 step_x = -1;
@@ -156,15 +147,45 @@ fn main() {
                 {
                     side_dist.y += delta_dist.y;
                     map_y += step_y;
-                    side = 0;
+                    side = 1;
                 }
-                
+
+                // check if ray hits wall !!!    
                 let index: usize = ((map_y * MAP_WIDTH as i32) + map_x) as usize;
-                println!("map_y: {}\nscreen_width: {}\nmap_x: {}", map_y, SCREEN_WIDTH, map_x);
                 if WORLD_MAP.grid[index] > 0 {
                     hit = 1;
                 }
             }
+            
+            //urmm idk how to explain this look at the 11th image at 
+            // https://lodev.org/cgtutor/raycasting.html#Introduction
+            if side == 0 {
+                perp_wall_dist = side_dist.x - delta_dist.x;
+            } else {
+                perp_wall_dist = side_dist.y - delta_dist.y;
+            }
+
+            // line height
+            let line_height: i32 = SCREEN_HEIGHT / perp_wall_dist as i32;
+            
+            //lowest and heighest pixel
+            let mut draw_start: i32 = -line_height / 2 + SCREEN_HEIGHT / 2;
+            if draw_start < 0 {draw_start = 0;}
+            let mut draw_end: i32 = line_height / 2 + SCREEN_HEIGHT / 2;
+            if draw_end >= SCREEN_HEIGHT { draw_end = SCREEN_HEIGHT - 1;}
+
+            let color: Color;
+            let index: usize = ((map_y * MAP_WIDTH as i32) + map_x) as usize;
+            match WORLD_MAP.grid[index] {
+                1 => color = Color::RED,
+                2 => color = Color::GREEN,
+                3 => color = Color::CYAN,
+                4 => color = Color::WHITE,
+                _ => color = Color::YELLOW
+            }
+
+            canvas.set_draw_color(color);
+            let _ = canvas.draw_line((x, draw_start), (x, draw_end));
             x += 1;
         }
 
