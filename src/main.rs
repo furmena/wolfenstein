@@ -183,9 +183,8 @@ fn main() {
                 4 => color = Color::WHITE,
                 _ => color = Color::YELLOW
             }
-
             canvas.set_draw_color(color);
-            let _ = canvas.draw_line((x, draw_start), (x, draw_end));
+            canvas.draw_line((x, draw_start), (x, draw_end));
             
             x += 1;
         }
@@ -224,15 +223,24 @@ fn main() {
                 },
                 
                 Event::KeyDown { keycode: Some(Keycode::Right), ..} => {
-                    let mut index = ((* MAP_WIDTH as f32) + ) as usize;
-                    index = ((* MAP_WIDTH as f32) + ) as usize;
+                    let old_dir_x = dir.x;
+                    dir.x = dir.x *-rot_speed.cos() - dir.y * -rot_speed.sin();
+                    dir.y = old_dir_x * -rot_speed.sin() + dir.y * -rot_speed.cos();
+                    let old_plane_x = plane.x;
+                    plane.x = plane.x * -rot_speed.cos() - plane.y * -rot_speed.sin();
+                    plane.y = old_dir_x * -rot_speed.sin() + plane.y * -rot_speed.cos();
+                
                 },
-                /*
+                
                 Event::KeyDown { keycode: Some(Keycode::Left), ..} => {
-                    let mut index = ((* MAP_WIDTH as f32) + ) as usize;
-                    index = ((* MAP_WIDTH as f32) + ) as usize;
+                    let old_dir_x = dir.x;
+                    dir.x = dir.x * rot_speed.cos() - dir.y * rot_speed.sin();
+                    dir.y = old_dir_x * rot_speed.sin() + dir.y * rot_speed.cos();
+                    let old_plane_x = plane.x;
+                    plane.x = plane.x * rot_speed.cos() - plane.y * rot_speed.sin();
+                    plane.y = old_dir_x * rot_speed.sin() + plane.y * rot_speed.cos();
                 },
-                */
+                
                 _ => {}
             }
         }
