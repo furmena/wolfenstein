@@ -73,10 +73,10 @@ fn main() {
     let mut dir: Vec2 = Vec2 {x: -1., y: 0.}; // player direction
     let mut plane: Vec2 = Vec2 {x: 0., y: 0.66}; // pos camera plane
 
-    let mut time: f32 = 0.; // time of current frame
-    let mut old_time: f32 = 0.; // time of previous frame
+    let mut time: f64 = 0.; // time of current frame
+    let mut old_time: f64 = 0.; // time of previous frame
 
-
+    let now = std::time::Instant::now();
     'main: loop {
         i = (i +1) % 255;
 
@@ -104,7 +104,7 @@ fn main() {
             // the length of ray from current positon to next x or y-side
             let mut side_dist: Vec2;
             
-            // urm idk goto line 98 in raycaster_flat.cpp
+            // urm idk goto line 98 in raycaster_flat.cpp 
             let delta_dist: Vec2 = Vec2 {
                 x: ((ray_dir.x * ray_dir.x) + 1.).sqrt() / (ray_dir.x * ray_dir.x),
                 y: ((ray_dir.y * ray_dir.y) + 1.).sqrt() / (ray_dir.y * ray_dir.y)
@@ -186,10 +186,60 @@ fn main() {
 
             canvas.set_draw_color(color);
             let _ = canvas.draw_line((x, draw_start), (x, draw_end));
+            
             x += 1;
         }
 
-        canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+
+        old_time = time;
+        time = now.elapsed().as_millis() as f64;
+        let frame_time = (time - old_time) as f32 / 1000.0;
+        println!("{}", frame_time);
+
+        let move_speed = frame_time * 5.;
+        let rot_speed = frame_time * 3.;
+
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::KeyDown { keycode: Some(Keycode::Up), .. } => {
+                    let mut index: usize = ((pos.y * MAP_WIDTH as f32) + pos.x + dir.x * move_speed) as usize;                    
+                    if WORLD_MAP.grid[index] == 0 {
+                        pos.x += dir.x * move_speed;
+                    }
+                    index = (pos.x + (pos.y + dir.y * move_speed)*MAP_WIDTH as f32) as usize;
+                    if WORLD_MAP.grid[index] == 0 {
+                        pos.y += dir.y * move_speed;
+                    }    
+                },
+                Event::KeyDown { keycode: Some(Keycode::Down), ..} => {
+                    let mut index = ((pos.y * MAP_WIDTH as f32) + pos.x + dir.x * move_speed) as usize;
+                    if WORLD_MAP.grid[index] == 0 {
+                        pos.x -= dir.x * move_speed;
+                    }
+                    index = ((pos.y - dir.y * move_speed * MAP_WIDTH as f32) + pos.x) as usize;
+                    if WORLD_MAP.grid[index] == 0 {
+                        pos.y -= dir.y * move_speed;
+                    }
+                },
+                
+                Event::KeyDown { keycode: Some(Keycode::Right), ..} => {
+                    let mut index = ((* MAP_WIDTH as f32) + ) as usize;
+                    index = ((* MAP_WIDTH as f32) + ) as usize;
+                },
+                /*
+                Event::KeyDown { keycode: Some(Keycode::Left), ..} => {
+                    let mut index = ((* MAP_WIDTH as f32) + ) as usize;
+                    index = ((* MAP_WIDTH as f32) + ) as usize;
+                },
+                */
+                _ => {}
+            }
+        }
+
+
+
+        canvas.present();
+        //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
